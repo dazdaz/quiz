@@ -44,7 +44,7 @@ gcloud iam service-accounts keys create credentials.json \
 * Run the following command:
 
     ```bash
-    gcloud run deploy quiz-app --source . --allow-unauthenticated --set-env-vars GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json --region us-central1
+    gcloud run deploy quiz-app --source . --service-account "quiz-app-sa@[YOUR_PROJECT_ID].iam.gserviceaccount.com" --region us-central1 --no-invoker-iam-check
     ```
 
     **Note:** Include `credentials.json` in your directory (but be careful with secrets; better to use Secret Manager in production).
