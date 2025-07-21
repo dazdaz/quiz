@@ -3,7 +3,7 @@
 ## 1. Setup Google Cloud Project:
 
 * Create a Google Cloud project.
-* Enable the Google Docs API in the API Library.
+* Enable the Google Docs API in the API Library "gcloud services enable docs.googleapis.com"
 * Create a service account in IAM & Admin > Service accounts.
 * Download the JSON key file and rename it to `credentials.json`.
 * Grant the service account "Viewer" access to your Google Doc by sharing the doc with the service account's email (found in the JSON key).
