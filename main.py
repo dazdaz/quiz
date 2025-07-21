@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask, request, session, redirect, url_for, render_template_string
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -6,6 +7,19 @@ from google.oauth2 import service_account
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Secure random secret key for sessions
+
+# Hardcoded Google Doc URL (replace with your actual Google Doc URL)
+DOC_URL = "https://docs.google.com/document/d/YOUR_DOCUMENT_ID_HERE/edit"  # Example: https://docs.google.com/document/d/1W98GkzMbu3MhVX4bq981dyjifWLYr3Bat6ej-iE52Os/edit
+
+# Extract Doc ID from URL
+def extract_doc_id(url):
+    match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
+    if match:
+        return match.group(1)
+    else:
+        raise ValueError("Invalid Google Doc URL")
+
+DOC_ID = extract_doc_id(DOC_URL)
 
 # Google Docs API setup
 SCOPES = ['https://www.googleapis.com/auth/documents.readonly']
@@ -59,26 +73,16 @@ def parse_questions(text):
         })
     return questions
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def home():
-    if request.method == 'POST':
-        doc_id = request.form.get('doc_id')
-        text = get_document_text(doc_id)
-        questions = parse_questions(text)
-        if not questions:
-            return render_template_string('<p>Error loading questions. Ensure the document is shared with the service account and follows the format.</p><a href="/">Try again</a>')
-        session['questions'] = questions
-        session['answers'] = {}
-        session['current'] = 0
-        return redirect(url_for('question'))
-    return render_template_string('''
-        <h1>Google Doc Quiz App</h1>
-        <form method="post">
-            <label>Google Doc ID: <input name="doc_id" required></label><br>
-            <button type="submit">Start Quiz</button>
-        </form>
-        <p>Note: Share the Google Doc with the service account email for access.</p>
-    ''')
+    text = get_document_text(DOC_ID)
+    questions = parse_questions(text)
+    if not questions:
+        return render_template_string('<p>Error loading questions from the hardcoded document. Ensure the document is shared with the service account and follows the format.</p>')
+    session['questions'] = questions
+    session['answers'] = {}
+    session['current'] = 0
+    return redirect(url_for('question'))
 
 @app.route('/question', methods=['GET', 'POST'])
 def question():
@@ -127,7 +131,7 @@ def summary():
     percent = (correct_count / total * 100) if total > 0 else 0
     session['incorrect'] = incorrect
     html = f'<h1>Quiz Summary</h1><p>Correct: {correct_count}<br>Incorrect: {wrong}<br>Score: {percent:.2f}%</p>'
-    html += '<a href="/review">Review Incorrect Answers</a><br><a href="/">Start New Quiz</a>'
+    html += '<a href="/review">Review Incorrect Answers</a><br><a href="/">Restart Quiz</a>'
     return render_template_string(html)
 
 @app.route('/review')
