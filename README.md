@@ -32,13 +32,19 @@ gcloud iam service-accounts keys create credentials.json \
     google-auth
     ```
 
+```
+  uv venv
+  source .venv/bin/activate
+  uv pip install -r requirements.txt
+```
+
 ## 3. Deploy to Cloud Run:
 
 * Install Google Cloud CLI if not already.
 * Run the following command:
 
     ```bash
-    gcloud run deploy quiz-app --source . --allow-unauthenticated --set-env-vars GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+    gcloud run deploy quiz-app --source . --allow-unauthenticated --set-env-vars GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json --region us-central1
     ```
 
     **Note:** Include `credentials.json` in your directory (but be careful with secrets; better to use Secret Manager in production).
