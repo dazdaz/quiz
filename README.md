@@ -3,7 +3,12 @@
 ## 1. Setup Google Cloud Project:
 
 * Create a Google Cloud project.
-* Enable the Google Docs API in the API Library "gcloud services enable docs.googleapis.com"
+* Enable the Google Docs API in the API Library
+
+```
+ gcloud services enable docs.googleapis.com drive.googleapis.com
+```
+
 * Create a service account in IAM & Admin > Service accounts
 
 ```
