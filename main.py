@@ -11,8 +11,8 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24) # Secure random secret key for sessions
 
 # --- Configuration ---
-DOC_URL = "https://docs.google.com/document/d/1uXF5Az_GbrzPCnM6_roZGbbEe-kuTyb_V9weWNA1Sls/edit"
-SERVICE_ACCOUNT_EMAIL = "quiz-reader@daev-playground.iam.gserviceaccount.com"
+DOC_URL = "https://docs.google.com/document/d/1234567890/edit"
+SERVICE_ACCOUNT_EMAIL = "quiz-reader@project.iam.gserviceaccount.com"
 NUM_QUESTIONS = 15
 QUIZ_DURATION_SECONDS = 3600 # 60 minutes
 PASSING_PERCENTAGE = 70.0 # The score required to pass (e.g., 70.0 for 70%)
