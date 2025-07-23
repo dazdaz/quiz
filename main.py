@@ -11,8 +11,8 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24) # Secure random secret key for sessions
 
 # --- Configuration ---
-DOC_URL = "https://docs.google.com/document/d/1234567890/edit"
-SERVICE_ACCOUNT_EMAIL = "quiz-reader@project.iam.gserviceaccount.com"
+DOC_URL = "https://docs.google.com/document/d/1uXF5Az_GbrzPCnM6_roZGbbEe-kuTyb_V9weWNA1Sls/edit"
+SERVICE_ACCOUNT_EMAIL = "quiz-reader@daev-playground.iam.gserviceaccount.com"
 NUM_QUESTIONS = 15
 QUIZ_DURATION_SECONDS = 3600 # 60 minutes
 PASSING_PERCENTAGE = 70.0 # The score required to pass (e.g., 70.0 for 70%)
@@ -122,6 +122,8 @@ def home():
         <p>You will have {int(QUIZ_DURATION_SECONDS / 60)} minutes to complete the quiz.</p>
         <p>You will need to get {PASSING_PERCENTAGE}% of the answers correct, to pass.</p>
         <a href="{url_for('start_quiz')}" class="start-button">Start Quiz</a>
+        <br><br><br>
+        <p>Send feedback to Darren Evans</p>
         </body></html>
     """
     return render_template_string(html)
@@ -147,6 +149,7 @@ def start_quiz():
     question_indices = list(range(len(ALL_QUESTIONS_CACHE)))
     random.shuffle(question_indices)
 
+    session.clear() # Clear any previous quiz data
     session['quiz_indices'] = question_indices[:NUM_QUESTIONS]
     session['answers'] = {}
     session['current'] = 0
@@ -187,14 +190,33 @@ def question():
         <!DOCTYPE html><html><head><title>Quiz Question</title><style>
         body {{ font-family: sans-serif; margin: 20px; }}
         #timer {{ position: fixed; top: 10px; right: 20px; font-size: 1.5em; font-weight: bold; color: #d9534f; }}
+
+        /* MODIFICATION: Styles for the repositioned end button */
+        .end-exam-container {{
+            position: fixed;
+            top: 45px; /* Positioned below the timer */
+            right: 20px;
+            z-index: 10;
+        }}
+        .button-end {{
+            color: white;
+            background-color: #d9534f;
+            border-color: #d43f3a;
+        }}
+        /* END MODIFICATION */
+
         form label {{ display: block; margin: 10px; font-size: 1.1em; }}
         .button-container {{ margin-top: 25px; }}
         .button {{ padding: 10px 20px; font-size: 1em; cursor: pointer; border-radius: 5px; border: 1px solid #ccc; }}
         .button-next {{ background-color: #f0f0f0; }}
-        .button-end {{ margin-left: 15px; color: white; background-color: #d9534f; border-color: #d43f3a;}}
         </style></head><body><div id="timer"></div>
         <h1>Question {current_step + 1} of {len(quiz_indices)}</h1><h2>{q['question']}</h2>
         <form method="post" id="quiz-form">
+
+            <div class="end-exam-container">
+                <button type="submit" name="action" value="end" class="button button-end"
+                        onclick="return confirm('Are you sure you want to end the exam?');">End Exam</button>
+            </div>
     """
     for i, opt in enumerate(q['options']):
         label = chr(65 + i)
@@ -203,9 +225,7 @@ def question():
     html += f"""
             <div class="button-container">
                 <button type="submit" name="action" value="next" class="button button-next">Next Question</button>
-                <button type="submit" name="action" value="end" class="button button-end"
-                        onclick="return confirm('Are you sure you want to end the exam?');">End Exam</button>
-            </div>
+                </div>
             </form>
             <script>
                 const endTime = {session.get('start_time', time.time())} + {QUIZ_DURATION_SECONDS};
@@ -239,7 +259,22 @@ def summary():
     if 'quiz_indices' not in session:
         return redirect(url_for('home'))
 
+    # --- MODIFICATION: Calculate and store completion time ---
+    # This runs only once when the summary page is first loaded.
+    if 'completion_duration_seconds' not in session and 'start_time' in session:
+        duration = time.time() - session['start_time']
+        session['completion_duration_seconds'] = duration
+
+    # Clean up start_time after its use
     session.pop('start_time', None)
+
+    # Format the stored duration for display
+    duration_seconds = session.get('completion_duration_seconds', 0)
+    completion_minutes = int(duration_seconds // 60)
+    completion_seconds = int(duration_seconds % 60)
+    time_taken_str = f"{completion_minutes} minutes and {completion_seconds} seconds"
+    # --- END MODIFICATION ---
+
     quiz_indices = session.get('quiz_indices', [])
     answers = session.get('answers', {})
     correct_count = 0
@@ -273,6 +308,7 @@ def summary():
         </style></head><body>
         <h1>Quiz Summary</h1>
         {result_message}
+        <p><strong>Time Taken:</strong> {time_taken_str}</p>
         <p><strong>Total Questions:</strong> {total}</p>
         <p style="color: green;"><strong>Correct:</strong> {correct_count}</p>
         <p style="color: red;"><strong>Incorrect:</strong> {total - correct_count}</p>
