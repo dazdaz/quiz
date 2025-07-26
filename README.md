@@ -14,28 +14,26 @@
 ```
 PROJECT=myproject
 SERVICE_ACCOUNT_ID=quiz-reader
-DISPLAY_NAME="read gdocs"
+DISPLAY_NAME="read gDocs"
 
 gcloud iam service-accounts create ${SERVICE_ACCOUNT_ID} \
     --display-name="${DISPLAY_NAME}" \
     --project=${PROJECT}
-
-gcloud iam service-accounts keys create credentials.json \
-  --iam-account quiz-reader@${PROJECT}.iam.gserviceaccount.com
 ```
 
 * Grant the service account "Viewer" access to your Google Doc by sharing the doc with the service account's email (found in the JSON key).
+* example: quiz-reader@myproject.iam.gserviceaccount.com
 
 ## 2. Prepare Files:
 
 * Save the provided code as `app.py`.
 * Create `requirements.txt` with the following content:
 
-    ```
-    flask
-    google-api-python-client
-    google-auth
-    ```
+ ```
+   flask
+   google-api-python-client
+   google-auth
+ ```
 
 ```
   uv venv
@@ -49,18 +47,11 @@ gcloud iam service-accounts keys create credentials.json \
 * Run the following command:
 
     ```bash
-    gcloud run deploy quiz-app --source . --service-account "quiz-app-sa@[YOUR_PROJECT_ID].iam.gserviceaccount.com" --region us-central1 --no-invoker-iam-check
+    gcloud run deploy quiz-app --source . --service-account "${SERVICE_ACCOUNT_ID}@[YOUR_PROJECT_ID].iam.gserviceaccount.com" --region us-central1 --no-invoker-iam-check
     ```
 
-    **Note:** Include `credentials.json` in your directory (but be careful with secrets; better to use Secret Manager in production).
-
-* Cloud Run will build and deploy the container. Access the provided URL.
+* Cloud Run will build and deploy the container, then access the provided URL.
 
 ## 4. Usage:
 
 * Visit the deployed URL, enter a Google Doc ID with the quiz content formatted as specified, and take the quiz.
-
----
-
-This implements the PRD requirements. For production, improve security (e.g., use Cloud Secret Manager for credentials) and add error handling/UI polish.
-
